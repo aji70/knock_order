@@ -23,7 +23,7 @@ pub mod ResolveRound {
             world.write_model(@match_data);
 
             // Get system dispatcher
-            let resolve_slot_option = world.dns(@"resolve_slot");
+            let resolve_slot_option = world.dns(@"ResolveSlot");
             let (resolve_slot_address, _) = resolve_slot_option.unwrap();
             let resolve_slot_system = IResolveSlotDispatcher { contract_address: resolve_slot_address };
 

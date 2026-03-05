@@ -54,13 +54,15 @@ pub mod LockMoves {
 
             world.write_model(@move_box);
 
-            // Check if both players locked
-            let player_a_box: MoveBox = world.read_model((match_id, match_data.player_a));
-            let player_b_box: MoveBox = world.read_model((match_id, match_data.player_b));
+            // Check if both players locked - re-read match_data to get latest state
+            let current_match: Match = world.read_model(match_id);
+            let player_a_box: MoveBox = world.read_model((match_id, current_match.player_a));
+            let player_b_box: MoveBox = world.read_model((match_id, current_match.player_b));
 
             if player_a_box.locked && player_b_box.locked {
-                match_data.match_state = MatchState::Locked;
-                world.write_model(@match_data);
+                let mut updated_match: Match = world.read_model(match_id);
+                updated_match.match_state = MatchState::Locked;
+                world.write_model(@updated_match);
             }
 
             world.emit_event(@MovesLocked {

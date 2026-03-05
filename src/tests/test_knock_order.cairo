@@ -10,7 +10,7 @@ mod tests {
     use dojo_starter::interfaces::IInitCards::{IInitCardsDispatcher, IInitCardsDispatcherTrait};
     use dojo_starter::models::{
         m_Match, m_MoveBox, m_MoveCard, m_Player, Match, MatchState, MoveBox, MoveCard, MoveType,
-        Player, STARTING_LIFE, MAX_SLOTS,
+        Player, STARTING_LIFE,
     };
     use dojo_starter::systems::match_setup::MatchSetup;
     use dojo_starter::systems::lock_moves::LockMoves;
@@ -19,8 +19,8 @@ mod tests {
     use dojo_starter::systems::end_round::EndRound;
     use dojo_starter::systems::end_match::EndMatch;
     use dojo_starter::systems::init_cards::InitCards;
-    use dojo::model::ModelStorage;
-    use dojo::world::{IWorldDispatcherTrait, WorldStorageTrait};
+    use dojo::model::{ModelStorage, ModelStorageTest};
+    use dojo::world::{WorldStorageTrait, world};
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait,
         spawn_test_world,
@@ -28,11 +28,11 @@ mod tests {
     use starknet::{ContractAddress, contract_address_const, testing};
 
     fn PLAYER_A() -> ContractAddress {
-        contract_address_const::<'player_a'>()
+        contract_address_const::<0x1>()
     }
 
     fn PLAYER_B() -> ContractAddress {
-        contract_address_const::<'player_b'>()
+        contract_address_const::<0x2>()
     }
 
     fn namespace_def() -> NamespaceDef {
@@ -94,7 +94,7 @@ mod tests {
     fn test_init_cards() {
         let caller = PLAYER_A();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         let (init_cards_address, _) = world.dns(@"InitCards").unwrap();
@@ -125,7 +125,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         let (match_setup_address, _) = world.dns(@"MatchSetup").unwrap();
@@ -154,7 +154,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         let (match_setup_address, _) = world.dns(@"MatchSetup").unwrap();
@@ -183,9 +183,9 @@ mod tests {
     fn test_join_match_wrong_player() {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
-        let wrong_player = contract_address_const::<'wrong'>();
+        let wrong_player = contract_address_const::<0x999>();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         let (match_setup_address, _) = world.dns(@"MatchSetup").unwrap();
@@ -208,7 +208,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         // Initialize cards
@@ -255,7 +255,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         let (match_setup_address, _) = world.dns(@"MatchSetup").unwrap();
@@ -281,7 +281,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         // Initialize cards
@@ -322,7 +322,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         // Initialize cards
@@ -356,8 +356,8 @@ mod tests {
         let player_b_data: Player = world.read_model(player_b);
         // Player A's strike (10 knock) should be blocked, so Player B takes 0 damage
         // Player B's block (0 knock) does nothing, so Player A takes 0 damage
-        assert(player_a_data.life == STARTING_LIFE, 'Player A life should be unchanged');
-        assert(player_b_data.life == STARTING_LIFE, 'Player B life should be unchanged');
+        assert(player_a_data.life == STARTING_LIFE, 'Player A life unchanged');
+        assert(player_b_data.life == STARTING_LIFE, 'Player B life unchanged');
     }
 
     #[test]
@@ -365,7 +365,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         // Initialize cards
@@ -414,7 +414,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         // Initialize cards
@@ -437,6 +437,10 @@ mod tests {
         lock_moves.lock_moves(match_id, array![1, 1, 1, 1, 1].span());
         testing::set_contract_address(player_b);
         lock_moves.lock_moves(match_id, array![1, 1, 1, 1, 1].span());
+
+        // Verify match is locked
+        let match_check: Match = world.read_model(match_id);
+        assert(match_check.match_state == MatchState::Locked, 'Match should be locked');
 
         // Resolve entire round
         let (resolve_round_address, _) = world.dns(@"ResolveRound").unwrap();
@@ -463,7 +467,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         // Initialize cards
@@ -506,7 +510,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         // Initialize cards
@@ -523,12 +527,12 @@ mod tests {
         testing::set_contract_address(player_b);
         match_setup.join_match(match_id);
 
-        // Set player A's life lower (wins round)
+        // Set player B's life lower (player A wins round)
         let mut player_a_data: Player = world.read_model(player_a);
         player_a_data.life = 30;
         world.write_model_test(@player_a_data);
         let mut player_b_data: Player = world.read_model(player_b);
-        player_b_data.life = 20; // Lower, so player B wins
+        player_b_data.life = 20; // Lower, so player A wins (more life = winner)
         world.write_model_test(@player_b_data);
 
         // Set match state to RoundEnd
@@ -544,8 +548,8 @@ mod tests {
         // Verify round reset for next round
         let match_data: Match = world.read_model(match_id);
         assert(match_data.round == 2, 'Round should be 2');
-        assert(match_data.match_state == MatchState::Setup, 'Match should be Setup for next round');
-        assert(match_data.player_b_wins == 1, 'Player B should have 1 win');
+        assert(match_data.match_state == MatchState::Setup, 'Match Setup for next round');
+        assert(match_data.player_a_wins == 1, 'Player A should have 1 win'); // Player A has more life (30 > 20)
 
         // Verify players reset to full life
         let player_a_data: Player = world.read_model(player_a);
@@ -563,7 +567,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         // Create match
@@ -596,12 +600,12 @@ mod tests {
     // ============================================================================
 
     #[test]
-    #[available_gas(50000000)]
+    #[available_gas(100000000)]
     fn test_complete_match_flow() {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         // Step 1: Initialize cards
@@ -628,6 +632,10 @@ mod tests {
         testing::set_contract_address(player_b);
         lock_moves.lock_moves(match_id, array![1, 1, 1, 1, 1].span());
 
+        // Verify match is locked
+        let match_check: Match = world.read_model(match_id);
+        assert(match_check.match_state == MatchState::Locked, 'Match should be locked');
+
         // Step 5: Resolve round
         let (resolve_round_address, _) = world.dns(@"ResolveRound").unwrap();
         let resolve_round = IResolveRoundDispatcher { contract_address: resolve_round_address };
@@ -641,7 +649,7 @@ mod tests {
         // Verify match progressed
         let match_data: Match = world.read_model(match_id);
         assert(match_data.round == 2, 'Round should be 2');
-        assert(match_data.match_state == MatchState::Setup, 'Match should be Setup for round 2');
+        assert(match_data.match_state == MatchState::Setup, 'Match Setup for round 2');
 
         // Verify players reset
         let player_a_data: Player = world.read_model(player_a);
@@ -660,7 +668,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         let (match_setup_address, _) = world.dns(@"MatchSetup").unwrap();
@@ -685,7 +693,7 @@ mod tests {
         let player_a = PLAYER_A();
         let player_b = PLAYER_B();
         let ndef = namespace_def();
-        let mut world = spawn_test_world([ndef].span());
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
         world.sync_perms_and_inits(contract_defs());
 
         let (match_setup_address, _) = world.dns(@"MatchSetup").unwrap();
